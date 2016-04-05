@@ -1,0 +1,54 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package cc;
+
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.HashMap;
+
+/**
+ *
+ * @author andregeraldes
+ */
+public class PDU {
+    private char version;
+    private char security;
+    private char type;
+    private char[] options;
+  
+    public PDU(){
+        this.security = '0';
+        this.version = '1';
+        this.options = new char[4];
+    }
+    
+    //Char tipo = in/out, char = i/o
+    public byte[] makeRegister(char tipo, String id, String ip, String port) throws UnsupportedEncodingException{
+        this.type = '1';
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|" + tipo 
+                + "|" + id
+                + "|" + ip
+                + "|" + port
+                + "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
+        
+        // String value = new String(b.array(), "UTF-8");
+        //System.out.println(value);
+        
+        return b.array();
+    }
+}
