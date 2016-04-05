@@ -10,6 +10,7 @@ package cc;
  * @author andregeraldes
  */
 public class User {
+    
     private String id;
     private String ip;
     private int porta;
