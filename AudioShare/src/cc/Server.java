@@ -46,9 +46,11 @@ public class Server {
             System.err.println("[-] Port " + this.port + " occupied.");
         }
         
-        while((this.socket = this.serverSocket.accept()) != null){
-            ClientHandler c = new ClientHandler(this.socket, users);
-            c.run();
+        while(true){
+            Socket s = this.serverSocket.accept();
+            System.out.println("[+] Connection from " + s.getInetAddress());
+            ClientHandler c = new ClientHandler(s, users);
+            new Thread(c).start();
         }
     }
 }

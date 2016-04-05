@@ -25,10 +25,12 @@ public class Client {
         int portaConsulta = Integer.parseInt(args[0]);
         InetAddress IP = InetAddress.getLocalHost();
         
+        
         String ip = IP.getHostAddress(); //Alterar para o servidor
         //String ip = 1.1.1.1;
 
-        Socket clientSocket = new Socket(IP.getHostAddress(), portaServer);
+        Socket clientSocket = new Socket(ip, portaServer);
+        //portaConsulta = clientSocket.getLocalPort();
         
         // Rececao e envio de dados
         DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
@@ -42,7 +44,7 @@ public class Client {
             if(sentence.equals("REGISTER")){
                 System.out.println("[+] Insert User ID ");
                 String user = inFromUser.readLine();
-                outToServer.write(p.makeRegister('i', user, ip, String.valueOf(portaConsulta)));
+                outToServer.write(p.makeRegister('i', user, IP.getHostAddress(), String.valueOf(portaConsulta)));
                 System.err.println("[+] Sent to server");
             }
             else{
