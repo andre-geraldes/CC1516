@@ -43,31 +43,33 @@ public class Client {
         
         System.out.println("[+] New Request:");
         String sentence = inFromUser.readLine();
+        boolean registed = false;
         while(!sentence.equals("EXIT")){
             PDU p = new PDU();
-            if(sentence.equals("REGISTER")){
+            if(sentence.equals("REGISTER") && !registed){
+                registed = true;
                 System.out.println("[+] Insert User ID ");
                 String user = inFromUser.readLine();
                 outToServer.write(p.makeRegister('i', user, IP.getHostAddress(), String.valueOf(portaConsulta)));
-                System.err.println("[+] Sent to server");
+                System.out.println("[+] Sent to server");
             }
-            else if(sentence.equals("CONSULT_REQUEST")){
+            else if(sentence.equals("CONSULT_REQUEST") && registed){
                 System.out.println("[+] Insert band name");
                 String band = inFromUser.readLine();
                 System.out.println("[+] Insert song name");
                 String song = inFromUser.readLine();
                 outToServer.write(p.makeConsult(band, song));
-                System.err.println("[+] Sent to server");
+                System.out.println("[+] Sent to server");
             }
             else{
-                System.err.println("[-] Unknow request");
+                System.out.println("[-] Unknow request or not registed");
             }
             
             //Proxima iteração e possivel saida
             System.out.println("[+] New Request:");
             sentence = inFromUser.readLine();
             if(sentence.equals("EXIT")){
-                System.err.println("[-] Exiting");
+                System.out.println("[-] Exiting");
                 p = new PDU();
                 outToServer.write(p.makeRegister('o', "", IP.getHostAddress(), String.valueOf(portaConsulta)));
             }
