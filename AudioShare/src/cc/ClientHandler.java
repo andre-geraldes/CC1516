@@ -5,6 +5,7 @@
  */
 package cc;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 /**
  *
  * @author andregeraldes
+ * This handler is used in the server, to serve each request from clients
  */
 public class ClientHandler implements Runnable {
     private Socket s;
@@ -45,7 +47,7 @@ public class ClientHandler implements Runnable {
             while(!exit){
                 switch(value.charAt(2)){
                     case '1':
-                        //Register
+                        // Register
                         String[] p = value.split("\\|");
                         if(p[1].equals("i")){
                             User u = new User(p[2],p[3],Integer.parseInt(p[4]));
@@ -62,6 +64,24 @@ public class ClientHandler implements Runnable {
                             System.err.println("[-] User " + user + " desconnected");
                             exit = true;
                         }
+                        break;
+                    case '2':
+                        // Consult request
+                        String[] a = value.split("\\|");
+                        String band = a[1];
+                        String song = a[2];
+                        
+                        HashMap<String, User> toSend = new HashMap(users);
+                        toSend.remove(user);
+                        for(User u : toSend.values()){
+                            String ipS = u.getIp();
+                            int portS = u.getPorta();
+                            Socket clientSocket = new Socket(ipS, portS);
+                            DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+                            PDU pdu = new PDU();
+                            outToServer.write(pdu.makeConsult(band, song));
+                        }
+                        
                         break;
                     default:
                         System.err.println("[-] Error with PDU");

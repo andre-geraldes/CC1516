@@ -27,10 +27,14 @@ public class Client {
         
         
         String ip = IP.getHostAddress(); //Alterar para o servidor
-        //String ip = 1.1.1.1;
+        //String ip = "192.168.204.1";
 
         Socket clientSocket = new Socket(ip, portaServer);
         //portaConsulta = clientSocket.getLocalPort();
+        
+        // Criar socket para receber pedidos
+        ClientConsult c = new ClientConsult(portaConsulta);
+        new Thread(c).start();
         
         // Rececao e envio de dados
         DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
@@ -45,6 +49,14 @@ public class Client {
                 System.out.println("[+] Insert User ID ");
                 String user = inFromUser.readLine();
                 outToServer.write(p.makeRegister('i', user, IP.getHostAddress(), String.valueOf(portaConsulta)));
+                System.err.println("[+] Sent to server");
+            }
+            else if(sentence.equals("CONSULT_REQUEST")){
+                System.out.println("[+] Insert band name");
+                String band = inFromUser.readLine();
+                System.out.println("[+] Insert song name");
+                String song = inFromUser.readLine();
+                outToServer.write(p.makeConsult(band, song));
                 System.err.println("[+] Sent to server");
             }
             else{

@@ -21,7 +21,6 @@ public class Server {
     private int port;
     private String ip;
     private ServerSocket serverSocket;
-    private Socket socket;
     private HashMap<String, User> users;
     
     public final static int DEFAULT_PORT = 3000;
@@ -35,7 +34,7 @@ public class Server {
         this.port = port;
     }
     
-    public void start() throws IOException{
+    public void start() throws IOException {
         InetAddress IP = InetAddress.getLocalHost();
         this.ip = IP.getHostAddress();
         

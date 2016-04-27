@@ -29,6 +29,8 @@ public class PDU {
     //Char tipo = in/out, char = i/o
     public byte[] makeRegister(char tipo, String id, String ip, String port) throws UnsupportedEncodingException{
         this.type = '1';
+        
+        //Colocar bytes a 0 nas opçoes
         Arrays.fill(this.options,'0');
                 
         StringBuilder d = new StringBuilder();
@@ -48,6 +50,28 @@ public class PDU {
         
         // String value = new String(b.array(), "UTF-8");
         //System.out.println(value);
+        
+        return b.array();
+    }
+    
+    public byte[] makeConsult(String band, String song) throws UnsupportedEncodingException{
+        this.type = '2';
+        
+        //Colocar bytes a 0 nas opçoes
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|" + band 
+                + "|" + song
+                + "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
         
         return b.array();
     }
