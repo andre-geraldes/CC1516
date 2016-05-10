@@ -75,4 +75,57 @@ public class PDU {
         
         return b.array();
     }
+    
+    /*
+        t -> FOUND(1) / NOT_FOUND(0)
+        hosts -> nr de hosts 
+        id -> id dos hosts
+        ip -> ip dos hosts
+        port -> porta udp
+    */
+    public byte[] makeResponse(String t, int hosts, String id, String ip, String port) throws UnsupportedEncodingException{
+        this.type = '3';
+        
+        //Colocar bytes a 0 nas opçoes
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|" + t 
+                + "|" + hosts
+                + "|" + id
+                + "|" + ip
+                + "|" + port
+                + "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
+        
+        return b.array();
+    }
+    
+    public byte[] makeRegisterResponse(String resp){
+        this.type = '8';
+        
+        //Colocar bytes a 0 nas opçoes
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|" + resp
+                + "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
+        
+        return b.array();
+    }
 }
