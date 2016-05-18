@@ -52,7 +52,7 @@ public class ClientHandler implements Runnable {
                         // Register
                         String[] p = value.split("\\|");
                         if(p[1].equals("i")){
-                            User u = new User(p[2],p[3],Integer.parseInt(p[4]));
+                            User u = new User(p[2],p[3],Integer.parseInt(p[4]), 0);
                             if(!this.users.containsKey(p[2])){
                                 this.users.put(p[2], u);
                                 user = p[2];
@@ -78,8 +78,14 @@ public class ClientHandler implements Runnable {
                         String band = a[1];
                         String song = a[2];
                         
+                        // HashMap com os utilizadores a quem fazer pedidos
                         HashMap<String, User> toSend = new HashMap(users);
+                        // Remover o utilizador que fez o consult_request
                         toSend.remove(user);
+                        // Guardar utilizadores que tem a musica
+                        HashMap<String, User> containsSong = new HashMap<>();
+                        
+                        // Enviar pedidos a todos os clientes registados
                         for(User u : toSend.values()){
                             String ipS = u.getIp();
                             int portS = u.getPorta();
@@ -93,13 +99,14 @@ public class ClientHandler implements Runnable {
                             
                             InputStream inFromServer = clientSocket.getInputStream();
                             
-                            //Esperar pela resposta, 5 seg
+                            //Esperar pela resposta, 2 seg
                             try {
-                                Thread.sleep(5000);
+                                Thread.sleep(2000);
                             } catch(InterruptedException ex) {
                                 Thread.currentThread().interrupt();
                             }
                             
+                            // Verificar se o cliente respondeu
                             if(inFromServer.available() == 0)
                                 System.out.println("[+] No response from " + ipS);
                             else{
@@ -109,10 +116,36 @@ public class ClientHandler implements Runnable {
                                 String resp = new String(response, "UTF-8");
                                 resp = resp.trim();
 
-                                System.out.println(resp);
+                                System.out.println("[+] Request response: " + resp);
+                                // Se o cliente tem a musica, guardar as suas informacoes
+                                if(resp.contains("FOUND(1)")){
+                                    String [] getUDP = resp.split("\\|");
+                                    User unew = new User(u);
+                                    unew.setPortaUDP(Integer.valueOf(getUDP[5]));
+                                    containsSong.put(u.getId(), unew);
+                                }
                             }
-                            // Guardar respostas positivas
-                            
+                        }
+                        PDU pdu = new PDU();
+                        if(containsSong.size() > 0){
+                                // Enviar clientes
+                                int nr = 0;
+                                String hosts = "";
+                                String ips = "";
+                                String ports = "";
+                                
+                                for(User usr : containsSong.values()){
+                                    nr++;
+                                    hosts += usr.getId()+"/";
+                                    ips += usr.getIp()+"/";
+                                    ports += usr.getPortaUDP()+"/";
+                                }
+                                
+                                os.write(pdu.makeResponse("FOUND(1)", nr, hosts, ips, ports));
+                        }
+                        else {
+                            // Enviar not found
+                            os.write(pdu.makeResponse("NOT_FOUND(0)", 0, "", "", ""));
                         }
                         
                         break;

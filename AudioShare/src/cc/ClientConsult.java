@@ -77,12 +77,15 @@ public class ClientConsult implements Runnable {
                 // Verificar se existe a musica e enviar resposta
                 PDU pdu = new PDU();
                 if(songs.contains(song)){
-                    os.write(pdu.makeResponse("FOUND(0)", 1, userID, ip, ""+portUDP));
+                    os.write(pdu.makeResponse("FOUND(1)", 1, userID, ip, ""+portUDP));
+                    // Criar server udp a espera do cliente
+                    ClientUDP c = new ClientUDP(this.portUDP, this.ip, this.userID);
+                    Thread y = new Thread(c);
+                    y.start();
                 }
                 else {
-                    os.write(pdu.makeResponse("NOT_FOUND(1)", 1, userID, ip, ""+portUDP));
+                    os.write(pdu.makeResponse("NOT_FOUND(0)", 1, userID, ip, ""+portUDP));
                 }
-                
                 s.close();
             } catch (IOException ex) {
                 //Logger.getLogger(ClientConsult.class.getName()).log(Level.SEVERE, null, ex);

@@ -14,11 +14,23 @@ public class User {
     private String id;
     private String ip;
     private int porta;
+    private int portaUDP;
+    
+    public User() {
+    }
 
-    public User(String id, String ip, int porta) {
+    public User(String id, String ip, int porta, int portaUDP) {
         this.id = id;
         this.ip = ip;
         this.porta = porta;
+        this.portaUDP = portaUDP;
+    }
+    
+    public User(User u) {
+        this.id = u.getId();
+        this.ip = u.getIp();
+        this.porta = u.getPorta();
+        this.portaUDP = u.getPortaUDP();
     }
 
     public String getId() {
@@ -44,6 +56,17 @@ public class User {
     public void setPorta(int porta) {
         this.porta = porta;
     }
-    
-    
+
+    public int getPortaUDP() {
+        return portaUDP;
+    }
+
+    public void setPortaUDP(int portaUDP) {
+        this.portaUDP = portaUDP;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" + "id=" + id + ", ip=" + ip + ", porta=" + porta + ", portaUDP=" + portaUDP + '}';
+    }
 }

@@ -108,6 +108,90 @@ public class PDU {
         return b.array();
     }
     
+    public byte[] makeProbeRequest(){
+        this.type = '4';
+        
+        //Colocar bytes a 0 nas opçoes
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
+        
+        return b.array();
+    }
+    
+    public byte[] makeProbeResponse(String timestamp){
+        this.type = '5';
+        
+        //Colocar bytes a 0 nas opçoes
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|" + timestamp + "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
+        
+        return b.array();
+    }
+    
+    
+    public byte[] makeRequest(String band, String song, String extension){
+        this.type = '6';
+        
+        //Colocar bytes a 0 nas opçoes
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|" + band
+                + "|" + song
+                + "|" + extension
+                + "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
+        
+        return b.array();
+    }
+    
+    public byte[] makeResponse(){
+        this.type = '7';
+        
+        //Colocar bytes a 0 nas opçoes
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
+        
+        return b.array();
+    }
+    
     public byte[] makeRegisterResponse(String resp){
         this.type = '8';
         
@@ -128,4 +212,6 @@ public class PDU {
         
         return b.array();
     }
+    
+    
 }
