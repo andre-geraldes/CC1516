@@ -8,6 +8,7 @@ package cc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -26,22 +27,36 @@ public class ClientConsult implements Runnable {
     private String ip;
     private String userID;
     private ServerSocket serverSocket;
+    private DatagramSocket serverUDP;
+    private ClientUDP c;
     private InputStream is;
     private OutputStream os;
     private ArrayList<String> songs;
     
     private volatile boolean run = true;
     
-    public ClientConsult(int port, int portUDP, InetAddress ip, String userID, ArrayList<String> s){
+    public ClientConsult(int port, int portUDP, InetAddress ip, String userID, ArrayList<String> s, DatagramSocket srv){
         this.port = port;
         this.portUDP = portUDP;
         this.ip = ip.getHostAddress();
         this.userID = userID;
         this.songs = s;
+        this.serverUDP = srv;
     }
 
     public ServerSocket getServerSocket() {
         return serverSocket;
+    }
+    
+    public DatagramSocket getServerUdp() {
+        return serverUDP;
+    }
+    
+    public ClientUDP getClientUDP(){
+        if(this.c == null){
+            this.c = new ClientUDP();
+        }
+        return this.c;
     }
     
     @Override
@@ -49,25 +64,25 @@ public class ClientConsult implements Runnable {
         try {
             this.serverSocket = new ServerSocket(this.port);
         } catch (IOException e) {
-            System.err.println("[-] Port " + this.port + " occupied.");
+            System.err.println("[TCP] Port " + this.port + " occupied.");
         }
         
         while(run){
             Socket s = null;
             try {
                 s = this.serverSocket.accept();
-                System.out.println("[+] Connection from server at " + s.getInetAddress());
+                System.out.println("[TCP] Request from server " + s.getInetAddress());
                 
                 is = s.getInputStream();
                 os = s.getOutputStream();
                 
                 
-                byte[] n = new byte[48 * 1024];
+                byte[] n = new byte[256];
                 this.is.read(n);
 
                 String value = new String(n, "UTF-8");
                 value = value.trim();
-                System.out.println("[+] PDU received: " + value);
+                System.out.println("[TCP] PDU received: " + value);
                 
                 // Split do pdu
                 String[] a = value.split("\\|");
@@ -79,7 +94,7 @@ public class ClientConsult implements Runnable {
                 if(songs.contains(song)){
                     os.write(pdu.makeResponse("FOUND(1)", 1, userID, ip, ""+portUDP));
                     // Criar server udp a espera do cliente
-                    ClientUDP c = new ClientUDP(this.portUDP, this.ip, this.userID);
+                    c = new ClientUDP(this.portUDP, this.ip, this.userID, this.serverUDP);
                     Thread y = new Thread(c);
                     y.start();
                 }

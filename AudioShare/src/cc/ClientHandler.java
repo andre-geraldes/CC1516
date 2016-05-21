@@ -39,7 +39,7 @@ public class ClientHandler implements Runnable {
             String user = "";
             boolean exit = false;
 
-            byte[] n = new byte[48 * 1024];
+            byte[] n = new byte[256];
             this.is.read(n);
             
             String value = new String(n, "UTF-8");
@@ -110,7 +110,7 @@ public class ClientHandler implements Runnable {
                             if(inFromServer.available() == 0)
                                 System.out.println("[+] No response from " + ipS);
                             else{
-                                byte[] response = new byte[48 * 1024];
+                                byte[] response = new byte[256];
                                 inFromServer.read(response);
                                 
                                 String resp = new String(response, "UTF-8");
@@ -155,11 +155,11 @@ public class ClientHandler implements Runnable {
                 }
                 
                 if(!exit){
-                    n = new byte[48 * 1024];
+                    n = new byte[256];
                     this.is.read(n);
                     value = new String(n, "UTF-8");
                     value = value.trim();
-                    System.out.println("[+] PDU received: " + value);
+                    System.out.println("[+] PDU received: " + value +" from user: " + user);
                 }
             }
             

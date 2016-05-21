@@ -172,11 +172,11 @@ public class PDU {
         return b.array();
     }
     
-    public byte[] makeResponse(){
+    public byte[] makeResponse(String number, byte[] partData){
         this.type = '7';
         
-        //Colocar bytes a 0 nas opçoes
-        Arrays.fill(this.options,'0');
+        // Colocar o numero em options
+        
                 
         StringBuilder d = new StringBuilder();
         d.append(this.version);
@@ -186,8 +186,9 @@ public class PDU {
         String data = "|";
         d.append(data);
         
-        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        final ByteBuffer b = ByteBuffer.allocate(48*1024);
         b.put(d.toString().getBytes());
+        b.put(partData);
         
         return b.array();
     }

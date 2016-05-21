@@ -14,8 +14,10 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,7 +74,7 @@ public class Client {
             Thread.sleep(1000); //Esperar 1 segundo pela resposta
             //Receber resposta
             InputStream is = clientSocket.getInputStream();
-            byte[] n = new byte[48 * 1024];
+            byte[] n = new byte[256];
             is.read(n);
             String value = new String(n, "UTF-8");
             value = value.trim();
@@ -84,7 +86,7 @@ public class Client {
         }
         
         // Criar thread para receber pedidos TCP
-        ClientConsult c = new ClientConsult(portConsulta, portUDP, IP, userID, songs);
+        ClientConsult c = new ClientConsult(portConsulta, portUDP, IP, userID, songs, serverSocket);
         Thread y = new Thread(c);
         y.start();
         
@@ -102,7 +104,14 @@ public class Client {
                 InputStream is = clientSocket.getInputStream();
                 // Esperar pela resposta
                 System.out.println("[+] Waiting for response...");
-                while(is.available() == 0);
+                int tout = 0;
+                while(is.available() == 0){
+                    Thread.sleep(1000);
+                    tout++;
+                    //Timeout waiting response
+                    if(tout == 10)
+                        break;
+                };
                 
                 byte[] n = new byte[48 * 1024];
                 is.read(n);
@@ -128,12 +137,12 @@ public class Client {
                         usersSong.put(nuser.getId(), nuser);
                     }
                     
-                    // Fazer probe
+                    // Fazer probe para descobrir melhor cliente
                     User best = new User();
+                    long diff = 1000000000;
                     for(User u : usersSong.values()){
-                        byte[] sendData = new byte[48 * 1024];
-                        sendData = new PDU().makeProbeRequest();
-                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(u.getIp()), u.getPortaUDP());
+                        PDU q = new PDU();
+                        DatagramPacket sendPacket = new DatagramPacket(q.makeProbeRequest(), q.makeProbeRequest().length, InetAddress.getByName(u.getIp()), u.getPortaUDP());
                         try {
                             serverSocket.send(sendPacket);
                         } catch (IOException ex) {
@@ -141,7 +150,9 @@ public class Client {
                         }
                         
                         //Fazer timestamp
-                        String timeStamp = new SimpleDateFormat("HH.mm.ss.dd.MM.yyyy").format(new Date());
+                        //String timeStamp = new SimpleDateFormat("HH-mm-ss.dd-MM-yyyy").format(new Date());
+                        String timeStamp = new SimpleDateFormat("HH-mm-ss.SSS").format(new Date());
+                        System.out.println("[+] My timeStamp: " + timeStamp);
                         byte[] receiveData = new byte[48 * 1024];
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         try {
@@ -149,9 +160,87 @@ public class Client {
                         } catch (IOException ex) {
                             Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                        String sentenceR = new String(receivePacket.getData());
+                        
+                        // Filtrar timestamp recebido
+                        String sentenceR = new String(receivePacket.getData(), 0, receivePacket.getLength());
                         System.out.println("[+] Timestamp: " + sentenceR);
+                        String [] cliTimeStamp = sentenceR.split("\\|");
+                        
+                        //Comparar timestamps
+                        SimpleDateFormat format = new SimpleDateFormat("HH-mm-ss.SSS");
+                        
+                        Date myDate = format.parse(timeStamp);
+                        Date cliDate = format.parse(cliTimeStamp[1]);
+                        long newDiff = cliDate.getTime() - myDate.getTime();
+                        if(newDiff < diff){
+                            diff = newDiff;
+                            best = u;
+                        }
                     }
+                    System.out.println("[+] Best client: " +best.toString() + " with a OWD of " + diff + " milis");
+                    
+                    // Pedir musica ao cliente
+                    PDU q = new PDU();
+                    String [] songExt = song.split("\\.");
+                    DatagramPacket sendPacket = new DatagramPacket(q.makeRequest(band, songExt[0], songExt[1]), 
+                            q.makeRequest(band, songExt[0], songExt[1]).length, 
+                            InetAddress.getByName(best.getIp()), best.getPortaUDP());
+                    try {
+                        serverSocket.send(sendPacket);
+                    } catch (IOException ex) {
+                        Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                    // Esperar um pouco para o cliente ler a musica
+                    //Thread.sleep(2000);
+                    
+                    // Receber datagram com a quantidade de partes
+                    byte[] receiveData = new byte[48 * 1024];
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    try {
+                        serverSocket.receive(receivePacket);
+                    } catch (IOException ex) {
+                        Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    // Split do numero de partes
+                    String sentenceR = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                    String [] quant = sentenceR.split("\\|");
+                    int parts = Integer.valueOf(quant[1]);
+                    // Receber musica
+                    System.out.println("[+] Receiving song " + song);
+                    HashMap<Integer, byte []> songParts = new HashMap<>();
+                    System.out.print("<");
+                    for(int i = 1; i <= parts; i++){
+                        System.out.print("=");
+                        if(i == parts/2)
+                            System.out.print("50%");
+                        receiveData = new byte[48 * 1024];
+                        receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                        try {
+                            serverSocket.receive(receivePacket);
+                        } catch (IOException ex) {
+                            Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        byte[] part = new byte[48*1024];
+                        part = receivePacket.getData();
+                        part = Arrays.copyOfRange(part, 7, part.length);
+                        songParts.put(i, part);
+                    }
+                    System.out.print(">");
+                    System.out.println("");
+                    
+                    // Guardar musica
+                    try{
+			FileOutputStream fos = new FileOutputStream(song);
+			for(byte[] b : songParts.values())
+                            fos.write(b);
+			fos.close();
+                    }
+                    catch(IOException e){
+                            System.out.println("[-] Error saving song");
+                    }
+                    
+                    System.out.println("[+] Song received");
                 }
                 else {
                     System.out.println("[-] Song not found!");
@@ -172,8 +261,12 @@ public class Client {
             }
         }
         
-        // Fechar socket e matar thread
+        // Fechar socket e matar threads
         clientSocket.close();
+        
+        c.getClientUDP().killUDP();
+        c.getServerUdp().close();
+        
         c.getServerSocket().close();
         c.killThread();
     }
