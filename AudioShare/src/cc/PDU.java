@@ -174,16 +174,20 @@ public class PDU {
     
     public byte[] makeResponse(String number, byte[] partData){
         this.type = '7';
+        Arrays.fill(this.options,'0');
         
         // Colocar o numero em options
-        
+        int nr = number.length();
+        for(int i = 0; i < nr; i++){
+            this.options[3-i] = number.charAt(nr-1-i);
+        }
                 
         StringBuilder d = new StringBuilder();
         d.append(this.version);
         d.append(this.security);
         d.append(this.type);
         d.append(this.options);
-        String data = "|";
+        char data = '|';
         d.append(data);
         
         final ByteBuffer b = ByteBuffer.allocate(48*1024);

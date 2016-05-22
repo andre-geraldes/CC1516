@@ -108,7 +108,7 @@ public class Client {
                 while(is.available() == 0){
                     Thread.sleep(1000);
                     tout++;
-                    //Timeout waiting response
+                    // Timeout waiting response
                     if(tout == 10)
                         break;
                 };
@@ -149,8 +149,8 @@ public class Client {
                             Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                         }
                         
-                        //Fazer timestamp
-                        //String timeStamp = new SimpleDateFormat("HH-mm-ss.dd-MM-yyyy").format(new Date());
+                        // Fazer timestamp
+                        // String timeStamp = new SimpleDateFormat("HH-mm-ss.dd-MM-yyyy").format(new Date());
                         String timeStamp = new SimpleDateFormat("HH-mm-ss.SSS").format(new Date());
                         System.out.println("[+] My timeStamp: " + timeStamp);
                         byte[] receiveData = new byte[48 * 1024];
@@ -166,9 +166,10 @@ public class Client {
                         System.out.println("[+] Timestamp: " + sentenceR);
                         String [] cliTimeStamp = sentenceR.split("\\|");
                         
-                        //Comparar timestamps
+                        // Comparar timestamps
                         SimpleDateFormat format = new SimpleDateFormat("HH-mm-ss.SSS");
                         
+                        // Calcular a diferenca
                         Date myDate = format.parse(timeStamp);
                         Date cliDate = format.parse(cliTimeStamp[1]);
                         long newDiff = cliDate.getTime() - myDate.getTime();
@@ -177,6 +178,7 @@ public class Client {
                             best = u;
                         }
                     }
+                    // Melhor cliente
                     System.out.println("[+] Best client: " +best.toString() + " with a OWD of " + diff + " milis");
                     
                     // Pedir musica ao cliente
@@ -202,10 +204,12 @@ public class Client {
                     } catch (IOException ex) {
                         Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    
                     // Split do numero de partes
                     String sentenceR = new String(receivePacket.getData(), 0, receivePacket.getLength());
                     String [] quant = sentenceR.split("\\|");
                     int parts = Integer.valueOf(quant[1]);
+                    
                     // Receber musica
                     System.out.println("[+] Receiving song " + song);
                     HashMap<Integer, byte []> songParts = new HashMap<>();
@@ -214,6 +218,8 @@ public class Client {
                         System.out.print("=");
                         if(i == parts/2)
                             System.out.print("50%");
+                        
+                        //Receber parte
                         receiveData = new byte[48 * 1024];
                         receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         try {
@@ -221,13 +227,24 @@ public class Client {
                         } catch (IOException ex) {
                             Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                        // Guardar parte
                         byte[] part = new byte[48*1024];
                         part = receivePacket.getData();
-                        part = Arrays.copyOfRange(part, 7, part.length);
-                        songParts.put(i, part);
+                        // Retirar cabecalho
+                        byte[] npart = new byte[48*1024-8];
+                        for(int j = 0; j < 48*1024-8; j++)
+                            npart[j] = part[j+8];
+                        
+                        songParts.put(i, npart);
                     }
+                    
                     System.out.print(">");
                     System.out.println("");
+                    
+                    for(int i = 1; i <= parts; i++){
+                        if(!songParts.containsKey(i))
+                            System.out.println("Falta este " + i);
+                    }
                     
                     // Guardar musica
                     try{
@@ -253,7 +270,16 @@ public class Client {
             
             //Proxima iteração e possivel saida
             System.out.println("[+] New Request:");
-            sentence = inFromUser.readLine();
+            System.out.println("[+] 1. CONSULT_REQUEST");
+            System.out.println("[+] 2. EXIT");
+            String k = inFromUser.readLine();
+            if(k.equals("1"))
+                sentence = "CONSULT_REQUEST";
+            else if(k.equals("2"))
+                sentence = "EXIT";
+            else
+                sentence = "ERROR";
+            //sentence = inFromUser.readLine();
             if(sentence.equals("EXIT")){
                 p = new PDU();
                 outToServer.write(p.makeRegister('o', "", IP.getHostAddress(), String.valueOf(portConsulta)));
@@ -271,7 +297,7 @@ public class Client {
         c.killThread();
     }
     
-    /* Read available songs from a txt */
+    // Ler as musicas do ficheiro txt 
     public static ArrayList<String> availableSongs(String filename) throws FileNotFoundException, IOException{
         ArrayList<String> n = new ArrayList<String>();
         File file = new File(filename);

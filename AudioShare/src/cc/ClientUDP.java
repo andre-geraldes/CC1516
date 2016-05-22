@@ -105,13 +105,13 @@ public class ClientUDP implements Runnable {
                 System.out.println("[UDP] Song loaded, ready to send.");
                 
                 // Calcular numero de partes
-                float nr = file.length/((float) 48*1024-8);
+                int maxSize = 48*1024-8;
+                float nr = file.length/((float) maxSize);
                 // Arredondar em excesso
                 int parts = (int) Math.ceil(nr);
                 
                 // Criar partes para enviar
                 HashMap<Integer,byte []> songParts = new HashMap<>();
-                int maxSize = 48*1024-8;
                 for(int i = 1; i <= parts; i++){
                     byte[] part = null;
                     if(file.length - (i-1)*maxSize < maxSize){
@@ -142,8 +142,9 @@ public class ClientUDP implements Runnable {
                 sendData = new byte[48*1024];
                 for(int i = 1; i <= songParts.size(); i++){
                     //Enviar
+                    
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(200);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                     }
