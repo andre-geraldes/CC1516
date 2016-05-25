@@ -73,7 +73,7 @@ public class ClientUDP implements Runnable {
             
             if(sentence.charAt(2) == '4'){
                 // Enviar valor da data atual para timestamp 
-                //String timeStamp = new SimpleDateFormat("HH-mm-ss.dd-MM-yyyy").format(new Date());
+                // String timeStamp = new SimpleDateFormat("HH-mm-ss.dd-MM-yyyy").format(new Date());
                 String timeStamp = new SimpleDateFormat("HH-mm-ss.SSS").format(new Date());
                 sendData = p.makeProbeResponse(timeStamp);
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
@@ -94,7 +94,7 @@ public class ClientUDP implements Runnable {
                 
                 // Procurar musica  
                 
-                //Abrir Musica
+                // Abrir Musica
                 Path filePath = Paths.get("src/cc/audiofiles/"+song+"."+exte);
                 byte [] file = null;
                 try {
@@ -129,7 +129,7 @@ public class ClientUDP implements Runnable {
                     songParts.put(i, part);
                 }
                 
-                //Enviar numero de partes
+                // Enviar numero de partes
                 sendData = p.makeProbeResponse(""+parts);
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
                 try {
@@ -139,12 +139,11 @@ public class ClientUDP implements Runnable {
                 }
                 
                 // Enviar partes
-                sendData = new byte[48*1024];
                 for(int i = 1; i <= songParts.size(); i++){
                     //Enviar
-                    
+                    sendData = new byte[48*1024];
                     try {
-                        Thread.sleep(200);
+                        Thread.sleep(300);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -156,9 +155,17 @@ public class ClientUDP implements Runnable {
                         Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     
-                    //Esperar resposta
+                    // Esperar resposta ?
                 }
                 
+                // Enviar final
+                sendData = p.makeResponse("0000", songParts.get(0));
+                    sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+                    try {
+                        serverSocket.send(sendPacket);
+                    } catch (IOException ex) {
+                        Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 System.out.println("[UDP] Song sent");
             }
             else {

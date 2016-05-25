@@ -90,6 +90,7 @@ public class Client {
         Thread y = new Thread(c);
         y.start();
         
+        // Manter o cliente ativo
         String sentence = "";
         while(!sentence.equals("EXIT")){
             if(sentence.equals("CONSULT_REQUEST")){
@@ -104,6 +105,7 @@ public class Client {
                 InputStream is = clientSocket.getInputStream();
                 // Esperar pela resposta
                 System.out.println("[+] Waiting for response...");
+                // Esperar no maximo 10 segundos por uma resposta
                 int tout = 0;
                 while(is.available() == 0){
                     Thread.sleep(1000);
@@ -194,7 +196,7 @@ public class Client {
                     }
                     
                     // Esperar um pouco para o cliente ler a musica
-                    //Thread.sleep(2000);
+                    Thread.sleep(500);
                     
                     // Receber datagram com a quantidade de partes
                     byte[] receiveData = new byte[48 * 1024];
@@ -214,6 +216,64 @@ public class Client {
                     System.out.println("[+] Receiving song " + song);
                     HashMap<Integer, byte []> songParts = new HashMap<>();
                     System.out.print("<");
+                    // Iniciar tudo a vazio
+                    for(int i = 1; i <= parts; i++){
+                        songParts.put(i, new byte[48*1024]);
+                    }
+                    
+                    
+                    // Receber 1o pdu
+                    // Receber parte
+                    receiveData = new byte[48 * 1024];
+                    receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    try {
+                        serverSocket.receive(receivePacket);
+                    } catch (IOException ex) {
+                        Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    // Guardar o numero do pdu
+                    String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                    String number = "";
+                    number += data.charAt(3);
+                    number += data.charAt(4);
+                    number += data.charAt(5);
+                    number += data.charAt(6);
+                    int nrPDU = Integer.valueOf(number);
+                    
+                    while(nrPDU != 0){
+                        System.out.print("=");
+                        if(nrPDU == parts/2)
+                            System.out.print("50%");
+                        
+                        //Receber parte
+                        receiveData = new byte[48 * 1024];
+                        receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                        try {
+                            serverSocket.receive(receivePacket);
+                        } catch (IOException ex) {
+                            Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        // Guardar o numero do pdu
+                        data = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                        number = "";
+                        number += data.charAt(3);
+                        number += data.charAt(4);
+                        number += data.charAt(5);
+                        number += data.charAt(6);
+                        nrPDU = Integer.valueOf(number);
+                        
+                        // Guardar parte
+                        byte[] part = new byte[48*1024];
+                        part = receivePacket.getData();
+                        // Retirar cabecalho
+                        byte[] npart = new byte[48*1024-8];
+                        for(int j = 0; j < 48*1024-8; j++)
+                            npart[j] = part[j+8];
+                        
+                        songParts.put(nrPDU, npart);
+                    }
+
+                    /*
                     for(int i = 1; i <= parts; i++){
                         System.out.print("=");
                         if(i == parts/2)
@@ -227,6 +287,15 @@ public class Client {
                         } catch (IOException ex) {
                             Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                        // Guardar o numero do pdu
+                        String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                        String number = "";
+                        number += data.charAt(3);
+                        number += data.charAt(4);
+                        number += data.charAt(5);
+                        number += data.charAt(6);
+                        int nrPDU = Integer.valueOf(number);
+                        
                         // Guardar parte
                         byte[] part = new byte[48*1024];
                         part = receivePacket.getData();
@@ -235,15 +304,16 @@ public class Client {
                         for(int j = 0; j < 48*1024-8; j++)
                             npart[j] = part[j+8];
                         
-                        songParts.put(i, npart);
-                    }
+                        songParts.put(nrPDU, npart);
+                    }*/
                     
                     System.out.print(">");
                     System.out.println("");
                     
+                    // Ver quais partes faltam
                     for(int i = 1; i <= parts; i++){
-                        if(!songParts.containsKey(i))
-                            System.out.println("Falta este " + i);
+                        if(songParts.get(i).length == 0)
+                            System.out.println("Missing " + i);
                     }
                     
                     // Guardar musica

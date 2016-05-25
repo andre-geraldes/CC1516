@@ -33,6 +33,14 @@ public class Server {
     public Server(int port){
         this.port = port;
     }
+
+    public HashMap<String, User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(HashMap<String, User> users) {
+        this.users = users;
+    }
     
     public void start() throws IOException {
         InetAddress IP = InetAddress.getLocalHost();
