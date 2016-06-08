@@ -253,6 +253,7 @@ public class Client {
                         } catch (IOException ex) {
                             Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                        
                         // Guardar o numero do pdu
                         data = new String(receivePacket.getData(), 0, receivePacket.getLength());
                         number = "";
@@ -270,43 +271,10 @@ public class Client {
                         for(int j = 0; j < 48*1024-8; j++)
                             npart[j] = part[j+8];
                         
-                        songParts.put(nrPDU, npart);
+                        if(nrPDU != 0)
+                            songParts.put(nrPDU, npart);
                     }
 
-                    /*
-                    for(int i = 1; i <= parts; i++){
-                        System.out.print("=");
-                        if(i == parts/2)
-                            System.out.print("50%");
-                        
-                        //Receber parte
-                        receiveData = new byte[48 * 1024];
-                        receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                        try {
-                            serverSocket.receive(receivePacket);
-                        } catch (IOException ex) {
-                            Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        // Guardar o numero do pdu
-                        String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                        String number = "";
-                        number += data.charAt(3);
-                        number += data.charAt(4);
-                        number += data.charAt(5);
-                        number += data.charAt(6);
-                        int nrPDU = Integer.valueOf(number);
-                        
-                        // Guardar parte
-                        byte[] part = new byte[48*1024];
-                        part = receivePacket.getData();
-                        // Retirar cabecalho
-                        byte[] npart = new byte[48*1024-8];
-                        for(int j = 0; j < 48*1024-8; j++)
-                            npart[j] = part[j+8];
-                        
-                        songParts.put(nrPDU, npart);
-                    }*/
-                    
                     System.out.print(">");
                     System.out.println("");
                     

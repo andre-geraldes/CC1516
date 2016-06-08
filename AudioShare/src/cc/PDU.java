@@ -218,5 +218,25 @@ public class PDU {
         return b.array();
     }
     
-    
+    public byte[] makeConsultServer(String band, String song) throws UnsupportedEncodingException{
+        this.type = '9';
+        
+        //Colocar bytes a 0 nas opçoes
+        Arrays.fill(this.options,'0');
+                
+        StringBuilder d = new StringBuilder();
+        d.append(this.version);
+        d.append(this.security);
+        d.append(this.type);
+        d.append(this.options);
+        String data = "|" + band 
+                + "|" + song
+                + "|";
+        d.append(data);
+        
+        final ByteBuffer b = ByteBuffer.allocate(d.toString().length());
+        b.put(d.toString().getBytes());
+        
+        return b.array();
+    }
 }

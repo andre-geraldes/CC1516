@@ -11,14 +11,14 @@ import java.io.IOException;
  *
  * @author andregeraldes
  */
-public class AudioShare {
+public class Central {
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Server server = new Server();
-        server.start();
+    public static void main(String[] args) throws IOException {
+        ServidorCentral s = new ServidorCentral();
+        s.start();
     }
     
 }

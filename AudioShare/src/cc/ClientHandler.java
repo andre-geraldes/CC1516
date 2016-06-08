@@ -24,10 +24,12 @@ public class ClientHandler implements Runnable {
     private HashMap users;   
     private InputStream is;
     private OutputStream os;
+    private Socket centralSocket;
     
-    public ClientHandler(Socket s, HashMap users){
+    public ClientHandler(Socket s, HashMap users, Socket cSocket){
         this.s = s;
         this.users = users;
+        this.centralSocket = cSocket;
     }
     
     @Override
@@ -35,6 +37,8 @@ public class ClientHandler implements Runnable {
         try{
             is = this.s.getInputStream();
             os = this.s.getOutputStream();
+            OutputStream osCentral = this.centralSocket.getOutputStream();
+            InputStream isCentral = this.centralSocket.getInputStream();
             
             String user = "";
             boolean exit = false;
@@ -144,10 +148,97 @@ public class ClientHandler implements Runnable {
                                 os.write(pdu.makeResponse("FOUND(1)", nr, hosts, ips, ports));
                         }
                         else {
-                            // Enviar not found
-                            os.write(pdu.makeResponse("NOT_FOUND(0)", 0, "", "", ""));
+                            // Enviar ao servidor central o pedido
+                            osCentral.write(value.getBytes());
+                            // Esperar pela resposta
+                            byte[] response = new byte[256];
+                            isCentral.read(response);
+                            
+                            String resp = new String(response, "UTF-8");
+                            resp = resp.trim();
+
+                            System.out.println("[+] Request response: " + resp);
+                            if(resp.contains("FOUND(1)")){
+                                //Enviar info ao cliente
+                            }
+                            else {
+                                os.write(pdu.makeResponse("NOT_FOUND(0)", 0, "", "", ""));
+                            }
                         }
                         
+                        break;
+                    case '9':
+                        // Consult request
+                        String[] b = value.split("\\|");
+                        String band1 = b[1];
+                        String song1 = b[2];
+                        
+                        // HashMap com os utilizadores a quem fazer pedidos
+                        HashMap<String, User> toSendS = new HashMap(users);
+                        // Guardar utilizadores que tem a musica
+                        HashMap<String, User> containsSongS = new HashMap<>();
+                        
+                        // Enviar pedidos a todos os clientes registados
+                        for(User u : toSendS.values()){
+                            String ipS = u.getIp();
+                            int portS = u.getPorta();
+                            
+                            //Ligar ao socket do cliente
+                            Socket clientSocket = new Socket(ipS, portS);
+                            DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+                            
+                            pdu = new PDU();
+                            outToServer.write(pdu.makeConsult(band1, song1));
+                            
+                            InputStream inFromServer = clientSocket.getInputStream();
+                            
+                            //Esperar pela resposta, 2 seg
+                            try {
+                                Thread.sleep(2000);
+                            } catch(InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                            
+                            // Verificar se o cliente respondeu
+                            if(inFromServer.available() == 0)
+                                System.out.println("[+] No response from " + ipS);
+                            else{
+                                byte[] response = new byte[256];
+                                inFromServer.read(response);
+                                
+                                String resp = new String(response, "UTF-8");
+                                resp = resp.trim();
+
+                                System.out.println("[+] Request response: " + resp);
+                                // Se o cliente tem a musica, guardar as suas informacoes
+                                if(resp.contains("FOUND(1)")){
+                                    String [] getUDP = resp.split("\\|");
+                                    User unew = new User(u);
+                                    unew.setPortaUDP(Integer.valueOf(getUDP[5]));
+                                    containsSongS.put(u.getId(), unew);
+                                }
+                            }
+                        }
+                        pdu = new PDU();
+                        if(containsSongS.size() > 0){
+                                // Enviar clientes
+                                int nr = 0;
+                                String hosts = "";
+                                String ips = "";
+                                String ports = "";
+                                
+                                for(User usr : containsSongS.values()){
+                                    nr++;
+                                    hosts += usr.getId()+"/";
+                                    ips += usr.getIp()+"/";
+                                    ports += usr.getPortaUDP()+"/";
+                                }
+                                
+                                os.write(pdu.makeResponse("FOUND(1)", nr, hosts, ips, ports));
+                        }
+                        else {
+                            os.write(pdu.makeResponse("NOT_FOUND(0)", 0, "", "", ""));
+                        }
                         break;
                     default:
                         System.err.println("[-] Error with PDU");

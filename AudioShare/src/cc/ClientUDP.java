@@ -158,14 +158,14 @@ public class ClientUDP implements Runnable {
                     // Esperar resposta ?
                 }
                 
-                // Enviar final
-                sendData = p.makeResponse("0000", songParts.get(0));
-                    sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-                    try {
-                        serverSocket.send(sendPacket);
-                    } catch (IOException ex) {
-                        Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                // Enviar informacao que e o ultimo pdu
+                sendData = p.makeResponse("0000", new byte[48*1024-8]);
+                sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+                try {
+                    serverSocket.send(sendPacket);
+                } catch (IOException ex) {
+                    Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 System.out.println("[UDP] Song sent");
             }
             else {
