@@ -104,14 +104,15 @@ public class Client {
                 // Receber resposta
                 InputStream is = clientSocket.getInputStream();
                 // Esperar pela resposta
-                System.out.println("[+] Waiting for response...");
-                // Esperar no maximo 10 segundos por uma resposta
+                System.out.println("[+] Waiting for response.");
+                // Esperar no maximo 15 segundos por uma resposta
                 int tout = 0;
                 while(is.available() == 0){
+                    System.out.print(".");
                     Thread.sleep(1000);
                     tout++;
                     // Timeout waiting response
-                    if(tout == 10)
+                    if(tout == 15)
                         break;
                 };
                 
@@ -122,6 +123,7 @@ public class Client {
                 //System.out.println(value);
                 
                 if(value.contains("FOUND(1)")){
+                    System.out.println("[+] Song found!");
                     // Split do value para retirar info dos clientes
                     String [] v = value.split("\\|");
                     int nrHosts = Integer.valueOf(v[2]);

@@ -88,7 +88,7 @@ public class ClientConsult implements Runnable {
                 String[] a = value.split("\\|");
                 String band = a[1];
                 String song = a[2];
-                
+
                 // Verificar se existe a musica e enviar resposta
                 PDU pdu = new PDU();
                 if(songs.contains(song)){
