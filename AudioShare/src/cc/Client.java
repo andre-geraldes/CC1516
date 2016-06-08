@@ -104,7 +104,7 @@ public class Client {
                 // Receber resposta
                 InputStream is = clientSocket.getInputStream();
                 // Esperar pela resposta
-                System.out.println("[+] Waiting for response.");
+                System.out.print("[+] Waiting for response.");
                 // Esperar no maximo 15 segundos por uma resposta
                 int tout = 0;
                 while(is.available() == 0){
@@ -112,8 +112,11 @@ public class Client {
                     Thread.sleep(1000);
                     tout++;
                     // Timeout waiting response
-                    if(tout == 15)
+                    if(tout == 15){
+                        System.out.println(".");
+                        System.out.println("[-] Timeout");
                         break;
+                    }
                 };
                 
                 byte[] n = new byte[48 * 1024];

@@ -160,6 +160,7 @@ public class ClientHandler implements Runnable {
                             System.out.println("[+] Request response: " + resp);
                             if(resp.contains("FOUND(1)")){
                                 //Enviar info ao cliente
+                                os.write(response);
                             }
                             else {
                                 os.write(pdu.makeResponse("NOT_FOUND(0)", 0, "", "", ""));
@@ -201,7 +202,7 @@ public class ClientHandler implements Runnable {
                             
                             // Verificar se o cliente respondeu
                             if(inFromServer.available() == 0)
-                                System.out.println("[+] No response from " + ipS);
+                                System.out.println("[+][Central] No response from " + ipS);
                             else{
                                 byte[] response = new byte[256];
                                 inFromServer.read(response);
@@ -209,7 +210,7 @@ public class ClientHandler implements Runnable {
                                 String resp = new String(response, "UTF-8");
                                 resp = resp.trim();
 
-                                System.out.println("[+] Request response: " + resp);
+                                System.out.println("[+][Central] Request response: " + resp);
                                 // Se o cliente tem a musica, guardar as suas informacoes
                                 if(resp.contains("FOUND(1)")){
                                     String [] getUDP = resp.split("\\|");
