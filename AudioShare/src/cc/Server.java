@@ -25,14 +25,14 @@ public class Server {
     private HashMap<String, User> users;
     // Socket para conectar ao servidor central:
     private Socket clientSocket;
-    
+
     public final static int DEFAULT_PORT = 3000;
-    
+
     public Server(){
         this.port = DEFAULT_PORT;
         this.users = new HashMap<String, User>();
     }
-    
+
     public Server(int port){
         this.port = port;
     }
@@ -44,20 +44,19 @@ public class Server {
     public void setUsers(HashMap<String, User> users) {
         this.users = users;
     }
-    
+
     public void start() throws IOException, InterruptedException {
         InetAddress IP = InetAddress.getLocalHost();
         this.ip = IP.getHostAddress();
-        
+
         // Criar o server socket
-        
         try {
             this.serverSocket = new ServerSocket(this.port);
             System.out.println("[+] Server socket created on IP " + this.ip + " port " + this.port);
         } catch (IOException e) {
             System.err.println("[-] Port " + this.port + " occupied.");
         }
-        
+
         // Registar servidor no central
         // Se estiver na mesma maquina
         InetAddress ipServer = InetAddress.getLocalHost();
@@ -68,10 +67,10 @@ public class Server {
         DataOutputStream outToServer = new DataOutputStream(this.clientSocket.getOutputStream());
         PDU p = new PDU();
         outToServer.write(p.makeRegister('i', "server", IP.getHostAddress(), String.valueOf(this.port)));
-        
+
         // Esperar confirmação do registo
         Thread.sleep(1000); //Esperar 1 segundo pela resposta
-        //Receber resposta
+        // Receber resposta
         InputStream is = clientSocket.getInputStream();
         byte[] n = new byte[256];
         is.read(n);
@@ -84,7 +83,7 @@ public class Server {
         }
         else
             System.out.println("[-] Server not registed!");
-        
+
         if(ok){
             while(true){
                 Socket s = this.serverSocket.accept();
@@ -93,5 +92,6 @@ public class Server {
                 new Thread(c).start();
             }
         }
+        this.serverSocket.close();
     }
 }

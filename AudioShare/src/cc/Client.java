@@ -14,11 +14,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -114,10 +111,12 @@ public class Client {
                     // Timeout waiting response
                     if(tout == 15){
                         System.out.println(".");
-                        System.out.println("[-] Timeout");
+                        System.out.println("[-] Timeout - Song not found");
                         break;
                     }
                 };
+                System.out.println(".");
+                if(tout == 15) break;
                 
                 byte[] n = new byte[48 * 1024];
                 is.read(n);
@@ -284,9 +283,12 @@ public class Client {
                     System.out.println("");
                     
                     // Ver quais partes faltam
+                    ArrayList<Integer> missing = new ArrayList();
                     for(int i = 1; i <= parts; i++){
-                        if(songParts.get(i).length == 0)
+                        if(songParts.get(i).length == 0){
                             System.out.println("Missing " + i);
+                            missing.add(i);
+                        }
                     }
                     
                     // Guardar musica

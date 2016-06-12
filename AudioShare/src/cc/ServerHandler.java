@@ -14,34 +14,35 @@ import java.util.HashMap;
 /**
  *
  * @author andregeraldes
+ * Usada no ServidorCentral.java
  */
 public class ServerHandler implements Runnable {
     private Socket s;
-    private HashMap servers;   
+    private HashMap servers;
     private InputStream is;
     private OutputStream os;
-    
+
     public ServerHandler(Socket s, HashMap servers){
         this.s = s;
         this.servers = servers;
     }
-    
+
     @Override
     public void run() {
         try{
             is = this.s.getInputStream();
             os = this.s.getOutputStream();
-            
+
             String server = "";
             boolean exit = false;
 
             byte[] n = new byte[256];
             this.is.read(n);
-            
+
             String value = new String(n, "UTF-8");
             value = value.trim();
             System.out.println("[+] PDU received: " + value);
-            
+
             while(!exit){
                 switch(value.charAt(2)){
                     case '1':
@@ -76,19 +77,19 @@ public class ServerHandler implements Runnable {
                         PDU pdu = new PDU();
                         if(serversTo.size() > 0){
                             for(String ip : serversTo.keySet()){
-                                
+
                                 // Mudar o tipo de pedido para 9
                                 StringBuilder newValue = new StringBuilder(value);
                                 newValue.setCharAt(2, '9');
-                                
+
                                 //Ligar ao socket do cliente
                                 Socket clientSocket = new Socket(ip, Integer.valueOf(serversTo.get(ip)));
                                 DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 
                                 outToServer.write(newValue.toString().getBytes());
-                                
+
                                 InputStream inFromServer = clientSocket.getInputStream();
-                                
+
                                 //Esperar pela resposta, 3 seg
                                 try {
                                     Thread.sleep(3000);
@@ -129,7 +130,7 @@ public class ServerHandler implements Runnable {
                         System.err.println("[-] Error with PDU");
                         break;
                 }
-                
+
                 if(!exit){
                     n = new byte[256];
                     this.is.read(n);
@@ -138,7 +139,7 @@ public class ServerHandler implements Runnable {
                     System.out.println("[+] PDU received: " + value +" from user: " + server);
                 }
             }
-            
+
             is.close();
             os.close();
         }

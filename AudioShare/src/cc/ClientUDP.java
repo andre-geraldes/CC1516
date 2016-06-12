@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author andregeraldes
+ * Usada no Client.java para conexao UDP
  */
 public class ClientUDP implements Runnable {
     private int portUDP;
@@ -37,11 +38,11 @@ public class ClientUDP implements Runnable {
     private String userID;
     private DatagramSocket serverSocket;
     private boolean run;
-    
+
     public ClientUDP() {
         this.run = false;
     }
-    
+
     public ClientUDP(int portUDP, String ip, String userID, DatagramSocket s){
         this.portUDP = portUDP;
         this.ip = ip;
@@ -49,13 +50,13 @@ public class ClientUDP implements Runnable {
         this.serverSocket = s;
         this.run = true;
     }
-    
+
     @Override
     public void run() {
-        
+
         byte[] receiveData = new byte[48 * 1024];
         byte[] sendData = new byte[48 * 1024];
-        
+
         while(this.run) {
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             try {
@@ -68,11 +69,11 @@ public class ClientUDP implements Runnable {
             // get address and port
             InetAddress IPAddress = receivePacket.getAddress();
             int port = receivePacket.getPort();
-            
+
             PDU p = new PDU();
-            
+
             if(sentence.charAt(2) == '4'){
-                // Enviar valor da data atual para timestamp 
+                // Enviar valor da data atual para timestamp
                 // String timeStamp = new SimpleDateFormat("HH-mm-ss.dd-MM-yyyy").format(new Date());
                 String timeStamp = new SimpleDateFormat("HH-mm-ss.SSS").format(new Date());
                 sendData = p.makeProbeResponse(timeStamp);
@@ -85,15 +86,15 @@ public class ClientUDP implements Runnable {
             }
             else if(sentence.charAt(2) == '6'){
                 // Split de sentence para saber qual musica enviar
-                
+
                 String [] s = sentence.split("\\|");
                 String band = s[1];
                 String song = s[2];
                 String exte = s[3];
                 System.out.println("[UDP] Song " + s[2] + " requested.");
-                
-                // Procurar musica  
-                
+
+                // Procurar musica
+
                 // Abrir Musica
                 Path filePath = Paths.get("src/cc/audiofiles/"+song+"."+exte);
                 byte [] file = null;
@@ -103,13 +104,13 @@ public class ClientUDP implements Runnable {
                     Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 System.out.println("[UDP] Song loaded, ready to send.");
-                
+
                 // Calcular numero de partes
                 int maxSize = 48*1024-8;
                 float nr = file.length/((float) maxSize);
                 // Arredondar em excesso
                 int parts = (int) Math.ceil(nr);
-                
+
                 // Criar partes para enviar
                 HashMap<Integer,byte []> songParts = new HashMap<>();
                 for(int i = 1; i <= parts; i++){
@@ -118,7 +119,7 @@ public class ClientUDP implements Runnable {
                         part = new byte[file.length - (i-1)*maxSize];
                         for(int k = 0; k < (file.length - (i-1)*maxSize); k++){
                             part[k] = file[(i-1)*maxSize + k];
-                        }    
+                        }
                     }
                     else {
                         part = new byte[maxSize];
@@ -128,7 +129,7 @@ public class ClientUDP implements Runnable {
                     }
                     songParts.put(i, part);
                 }
-                
+
                 // Enviar numero de partes
                 sendData = p.makeProbeResponse(""+parts);
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
@@ -137,7 +138,7 @@ public class ClientUDP implements Runnable {
                 } catch (IOException ex) {
                     Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
+
                 // Enviar partes
                 for(int i = 1; i <= songParts.size(); i++){
                     //Enviar
@@ -154,10 +155,10 @@ public class ClientUDP implements Runnable {
                     } catch (IOException ex) {
                         Logger.getLogger(ClientUDP.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    
+
                     // Esperar resposta ?
                 }
-                
+
                 // Enviar informacao que e o ultimo pdu
                 sendData = p.makeResponse("0000", new byte[48*1024-8]);
                 sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
@@ -173,7 +174,7 @@ public class ClientUDP implements Runnable {
             }
         }
     }
-    
+
     public void killUDP(){
         this.run = false;
     }
